@@ -20,7 +20,16 @@ router.get('/register', (req, res)=>{
 })
 
 router.get('/login', (req, res)=>{
-    res.render('login')
+    console.log('query is', req.query.success)
+    if(req.query.success){
+        res.render('login', {
+            success: 'Registration Success! Please Login'
+        })
+    }
+    else {
+        res.render('login')
+    }
+    
 })
 
 router.get('/profile', authController.isLoggedIn, (req, res)=>{

@@ -20,7 +20,7 @@ exports.login = async (req, res) => {
 
         db.query('SELECT * FROM users WHERE email=?', [email], async (error, results) => {
             console.log(results)
-            if (!results || !(await bcrypt.compare(password, results[0].password))) {
+            if (results.length<1 || !(await bcrypt.compare(password, results[0].password))) {
                 return res.status(401).render('login', { message: 'Wrong password or email!' })
             }
             else {
@@ -79,9 +79,7 @@ exports.register = (req, res) => {
             }
             else {
                 console.log(results)
-                return res.render('register', {
-                    message: 'User registered!'
-                })
+                res.status(200).redirect('/login?success=1')
             }
         })
     })
@@ -110,7 +108,7 @@ exports.isLoggedIn = async (req, res, next) => {
 
         }
         catch(error){
-            console.log(error)
+            //console.log(error)
             return next()
         }
     }
@@ -128,4 +126,40 @@ exports.logout=async (req, res)=>{
 
     res.status(200).redirect('/')
 
+}
+
+exports.delete=async (req, res)=>{
+    console.log(req.cookies)
+
+    if(req.cookies.jwt){
+        try{
+            //verify the token
+            const decoded=await promisify(jwt.verify)(req.cookies.jwt, process.env.JWT_SECRET)
+            console.log(decoded)
+
+            //Check if the user still exists
+            db.query('DELETE FROM users WHERE id=?', [decoded.id], (error, results)=>{
+                if(results.length<1) {
+                    console.log('no user found!');
+                }
+                else {
+                    console.log('deleted usr is', results[0]);
+                }
+                
+            })
+
+            //delete the jwt
+            res.cookie('jwt', 'logout', {
+                expires: new Date(Date.now() + 2000),
+                httpOnly: true
+            })
+
+        }
+        catch(error){
+            console.log(error)
+        }
+    }
+
+    res.status(200).redirect('/')
+    
 }

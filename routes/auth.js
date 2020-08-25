@@ -9,4 +9,6 @@ router.post('/login', authController.login)
 
 router.get('/logout', authController.logout)
 
+router.get('/delete', authController.delete)
+
 module.exports=router
